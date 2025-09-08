@@ -121,7 +121,7 @@ export default function Index() {
           </div>
 
           <div className="grid gap-6 md:gap-8 md:grid-cols-4 relative">
-            {/* Connecting Heart Animation - Between Achyut and Akshita */}
+       
             {(hoveredAchyut || hoveredAkshita) && (
               <div className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
                 <div className="text-pink-400 text-4xl animate-bounce">💕</div>
