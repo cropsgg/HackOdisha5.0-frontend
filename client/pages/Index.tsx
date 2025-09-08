@@ -15,6 +15,8 @@ import {
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [hoveredAchyut, setHoveredAchyut] = useState(false);
+  const [hoveredAkshita, setHoveredAkshita] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -118,22 +120,46 @@ export default function Index() {
             <p className="text-gray-300 max-w-2xl mx-auto">The minds behind TARA — building advanced lunar and planetary rover navigation.</p>
           </div>
 
-          <div className="grid gap-6 md:gap-8 md:grid-cols-4">
-            <div className="rounded-xl border border-gray-600/30 bg-gray-900/40 p-6 text-center">
-              <h3 className="text-xl font-semibold text-white">Name 1</h3>
-              <p className="text-gray-400 mt-1">Role / Contribution</p>
+          <div className="grid gap-6 md:gap-8 md:grid-cols-4 relative">
+            {/* Connecting Heart Animation - Between Achyut and Akshita */}
+            {(hoveredAchyut || hoveredAkshita) && (
+              <div className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                <div className="text-pink-400 text-4xl animate-bounce">💕</div>
+              </div>
+            )}
+            
+            <div 
+              className="rounded-xl border border-gray-600/30 bg-gray-900/40 p-6 text-center relative group"
+              onMouseEnter={() => setHoveredAchyut(true)}
+              onMouseLeave={() => setHoveredAchyut(false)}
+            >
+              <h3 className="text-xl font-semibold text-white">Achyut Mukund</h3>
+              <p className="text-gray-400 mt-1">ML & Backend</p>
+              {hoveredAchyut && (
+                <div className="absolute top-2 right-2 text-pink-400 text-lg">💖</div>
+              )}
             </div>
-            <div className="rounded-xl border border-gray-600/30 bg-gray-900/40 p-6 text-center">
-              <h3 className="text-xl font-semibold text-white">Name 2</h3>
-              <p className="text-gray-400 mt-1">Role / Contribution</p>
+            
+            <div 
+              className="rounded-xl border border-gray-600/30 bg-gray-900/40 p-6 text-center relative group"
+              onMouseEnter={() => setHoveredAkshita(true)}
+              onMouseLeave={() => setHoveredAkshita(false)}
+            >
+              <h3 className="text-xl font-semibold text-white">Akshita Sharma</h3>
+              <p className="text-gray-400 mt-1">Frontend & Design</p>
+              {hoveredAkshita && (
+                <div className="absolute top-2 right-2 text-pink-400 text-lg">💖</div>
+              )}
             </div>
+            
             <div className="rounded-xl border border-gray-600/30 bg-gray-900/40 p-6 text-center">
-              <h3 className="text-xl font-semibold text-white">Name 3</h3>
-              <p className="text-gray-400 mt-1">Role / Contribution</p>
+              <h3 className="text-xl font-semibold text-white">Adarsh Kumar</h3>
+              <p className="text-gray-400 mt-1">ML & Backend</p>
             </div>
+            
             <div className="rounded-xl border border-gray-600/30 bg-gray-900/40 p-6 text-center">
-              <h3 className="text-xl font-semibold text-white">Name 4</h3>
-              <p className="text-gray-400 mt-1">Role / Contribution</p>
+              <h3 className="text-xl font-semibold text-white">Arzaan Wadiya</h3>
+              <p className="text-gray-400 mt-1">ML</p>
             </div>
           </div>
         </div>
