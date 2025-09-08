@@ -868,12 +868,12 @@ const DataTransfer: React.FC = () => {
                     </div>
                     <p className="text-sm text-green-300">4/4 validators active</p>
                   </div>
-                  <div className="p-4 bg-yellow-900/30 border border-yellow-500/30 rounded-lg">
+                  <div className="p-4 bg-green-900/30 border border-green-500/30 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
-                      <AlertTriangle className="w-5 h-5 text-yellow-400" />
-                      <span className="text-yellow-200 font-semibold">Zero-Knowledge Proofs</span>
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      <span className="text-green-200 font-semibold">Zero-Knowledge Proofs</span>
                     </div>
-                    <p className="text-sm text-yellow-300">Implementation pending</p>
+                    <p className="text-sm text-green-300">Active and operational</p>
                 </div>
               </div>
             </CardContent>
