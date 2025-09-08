@@ -21,10 +21,14 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@noble/curves": "^2.0.0",
+    "@noble/hashes": "^2.0.0",
     "@openzeppelin/contracts": "^5.4.0",
+    "circomlibjs": "^0.1.7",
     "dotenv": "^17.2.2",
     "ethers": "^6.15.0",
     "express": "^5.1.0",
+    "snarkjs": "^0.7.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {

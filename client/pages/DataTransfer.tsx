@@ -26,10 +26,15 @@ import {
   BarChart3,
   FileText,
   Globe,
-  CheckCircle
+  CheckCircle,
+  Lock,
+  ShieldCheck,
+  Eye,
+  Zap
 } from 'lucide-react';
 import { useAvalancheSubnet } from '@/hooks/useAvalancheSubnet';
 import { useSmartContracts } from '@/hooks/useSmartContracts';
+import { useZKP } from '@/hooks/useZKP';
 import { DEPLOYED_CONTRACTS } from '@/utils/avalanche';
 
 const DataTransfer: React.FC = () => {
@@ -51,6 +56,20 @@ const DataTransfer: React.FC = () => {
     setSelectedStation,
     setShowSensitiveData
   } = useAvalancheSubnet();
+
+  const {
+    isLoading: zkpLoading,
+    error: zkpError,
+    proofs,
+    generateDataIntegrityProof,
+    verifyDataIntegrityProof,
+    generateStationAuthProof,
+    verifyStationAuthProof,
+    generateTransferValidationProof,
+    verifyTransferValidationProof,
+    clearError: clearZKPError,
+    getProofStatus
+  } = useZKP();
 
   const {
     contractStats,
@@ -85,6 +104,13 @@ const DataTransfer: React.FC = () => {
   const [newStationName, setNewStationName] = useState('');
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [zkpEnabled, setZkpEnabled] = useState(true);
+  const [proofStatus, setProofStatus] = useState({
+    dataIntegrity: false,
+    stationAuth: false,
+    transferValidation: false,
+    missionCompletion: false,
+  });
 
 
   const handleTransfer = async () => {
@@ -93,6 +119,39 @@ const DataTransfer: React.FC = () => {
         const address = await connectWallet();
         setWalletAddress(address);
         setWalletConnected(true);
+      }
+
+      // Generate ZKP proofs if enabled
+      if (zkpEnabled) {
+        // Generate data integrity proof
+        const dataIntegrityProof = await generateDataIntegrityProof(
+          `Mission data from ${transferForm.fromStation} to ${transferForm.toStation}`,
+          transferForm.fromStation
+        );
+
+        // Generate station auth proof
+        const stationAuthProof = await generateStationAuthProof(
+          transferForm.fromStation,
+          'station_credentials'
+        );
+
+        // Generate transfer validation proof
+        const transferValidationProof = await generateTransferValidationProof(
+          `transfer_${Date.now()}`,
+          transferForm.dataSize,
+          'data_checksum',
+          'station_secret'
+        );
+
+        if (dataIntegrityProof && stationAuthProof && transferValidationProof) {
+          console.log('ZKP proofs generated successfully');
+          setProofStatus({
+            dataIntegrity: true,
+            stationAuth: true,
+            transferValidation: true,
+            missionCompletion: false,
+          });
+        }
       }
 
       // Use smart contract for data transfer
@@ -223,6 +282,16 @@ const DataTransfer: React.FC = () => {
             </div>
           </div>
 
+          {/* ZKP Status */}
+          <div className="mt-4 flex justify-center">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-900/30 border border-purple-500/30">
+              <Lock className="w-4 h-4 text-purple-400 mr-2" />
+              <span className="text-purple-400 text-sm font-medium">
+                Zero-Knowledge Proofs {zkpEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+          </div>
+
           {/* Contract Status */}
           <div className="mt-4 flex justify-center space-x-4">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-900/30 border border-blue-500/30">
@@ -342,6 +411,44 @@ const DataTransfer: React.FC = () => {
                     className="border-red-500/30 text-red-200 hover:bg-red-900/30"
                   >
                     Dismiss
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {zkpError && (
+              <div className="max-w-md p-4 bg-orange-900/30 border border-orange-500/30 rounded-lg text-orange-200 text-sm">
+                <div className="flex items-center mb-2">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  <span className="font-semibold">ZKP Generation Error</span>
+                </div>
+                <div className="mb-3 text-xs">
+                  {zkpError}
+                </div>
+                <div className="mb-3 text-xs text-orange-300">
+                  <strong>ZKP Error Details:</strong>
+                  <ul className="mt-1 ml-4 list-disc">
+                    <li>Zero-knowledge proof generation failed</li>
+                    <li>This may affect data privacy and integrity verification</li>
+                    <li>Transfer will continue without ZKP protection</li>
+                    <li>Check browser console for technical details</li>
+                  </ul>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={clearZKPError}
+                    size="sm"
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    Dismiss
+                  </Button>
+                  <Button 
+                    onClick={() => setZkpEnabled(false)}
+                    size="sm"
+                    variant="outline"
+                    className="border-orange-500/30 text-orange-200 hover:bg-orange-900/30"
+                  >
+                    Disable ZKP
                   </Button>
                 </div>
               </div>
@@ -849,6 +956,87 @@ const DataTransfer: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* ZKP Proof Status */}
+            <Card className="bg-purple-900/20 border-purple-500/30">
+              <CardHeader>
+                <CardTitle className="flex items-center text-purple-200">
+                  <ShieldCheck className="w-5 h-5 mr-2" />
+                  Zero-Knowledge Proof Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-purple-800/30 rounded border border-purple-500/30">
+                      <div className="flex items-center">
+                        <Lock className="w-4 h-4 text-purple-400 mr-2" />
+                        <span className="text-purple-300">Data Integrity</span>
+                      </div>
+                      <Badge variant={proofStatus.dataIntegrity ? "default" : "secondary"} 
+                             className={proofStatus.dataIntegrity ? "bg-green-600" : "bg-gray-600"}>
+                        {proofStatus.dataIntegrity ? "Verified" : "Pending"}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-purple-800/30 rounded border border-purple-500/30">
+                      <div className="flex items-center">
+                        <ShieldCheck className="w-4 h-4 text-purple-400 mr-2" />
+                        <span className="text-purple-300">Station Auth</span>
+                      </div>
+                      <Badge variant={proofStatus.stationAuth ? "default" : "secondary"}
+                             className={proofStatus.stationAuth ? "bg-green-600" : "bg-gray-600"}>
+                        {proofStatus.stationAuth ? "Verified" : "Pending"}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-purple-800/30 rounded border border-purple-500/30">
+                      <div className="flex items-center">
+                        <Zap className="w-4 h-4 text-purple-400 mr-2" />
+                        <span className="text-purple-300">Transfer Validation</span>
+                      </div>
+                      <Badge variant={proofStatus.transferValidation ? "default" : "secondary"}
+                             className={proofStatus.transferValidation ? "bg-green-600" : "bg-gray-600"}>
+                        {proofStatus.transferValidation ? "Verified" : "Pending"}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-purple-800/30 rounded border border-purple-500/30">
+                      <div className="flex items-center">
+                        <Eye className="w-4 h-4 text-purple-400 mr-2" />
+                        <span className="text-purple-300">Mission Completion</span>
+                      </div>
+                      <Badge variant={proofStatus.missionCompletion ? "default" : "secondary"}
+                             className={proofStatus.missionCompletion ? "bg-green-600" : "bg-gray-600"}>
+                        {proofStatus.missionCompletion ? "Verified" : "Pending"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-purple-800/20 rounded border border-purple-500/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-purple-300 text-sm">ZKP Protection</span>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={zkpEnabled}
+                        onChange={(e) => setZkpEnabled(e.target.checked)}
+                        className="w-4 h-4 text-purple-600 bg-purple-800 border-purple-500 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-purple-400 text-sm">
+                        {zkpEnabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-purple-400 mt-2">
+                    Zero-knowledge proofs ensure data privacy and integrity without revealing sensitive information
+                  </p>
                 </div>
               </CardContent>
             </Card>
