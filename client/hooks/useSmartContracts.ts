@@ -122,58 +122,6 @@ export const useSmartContracts = (): UseSmartContractsReturn => {
     }
   }, []);
 
-  // Switch to Fuji testnet
-  const switchToFujiTestnet = useCallback(async () => {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      try {
-        // First, check if we're already on the correct network
-        const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-        if (currentChainId === '0xa869') {
-          return; // Already on Fuji testnet
-        }
-
-        // Try to switch to Fuji testnet
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0xa869' }], // Fuji testnet chain ID
-        });
-      } catch (switchError: any) {
-        console.log('Switch error:', switchError);
-        
-        // If the chain doesn't exist, add it
-        if (switchError.code === 4902 || switchError.code === -32603) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: '0xa869',
-                  chainName: 'Avalanche Fuji Testnet',
-                  nativeCurrency: {
-                    name: 'AVAX',
-                    symbol: 'AVAX',
-                    decimals: 18,
-                  },
-                  rpcUrls: ['https://api.avax-test.network/ext/bc/C/rpc'],
-                  blockExplorerUrls: ['https://testnet.snowtrace.io/'],
-                  iconUrls: ['https://cryptologos.cc/logos/avalanche-avax-logo.png'],
-                },
-              ],
-            });
-          } catch (addError: any) {
-            console.error('Add chain error:', addError);
-            throw new Error(`Failed to add Fuji testnet to MetaMask: ${addError.message || 'Unknown error'}`);
-          }
-        } else if (switchError.code === 4001) {
-          throw new Error('User rejected the network switch. Please approve the network change in MetaMask.');
-        } else {
-          throw new Error(`Failed to switch to Fuji testnet: ${switchError.message || 'Unknown error'}`);
-        }
-      }
-    } else {
-      throw new Error('MetaMask not found. Please install MetaMask to connect your wallet.');
-    }
-  }, []);
 
   // Get user balance
   const getUserBalance = useCallback(async (): Promise<string> => {
@@ -189,6 +137,7 @@ export const useSmartContracts = (): UseSmartContractsReturn => {
     }
   }, [tokenContract, signer]);
 
+
   // Connect wallet
   const connectWallet = useCallback(async (): Promise<string> => {
     try {
@@ -202,9 +151,6 @@ export const useSmartContracts = (): UseSmartContractsReturn => {
       // Check if MetaMask is available
       if (typeof window !== 'undefined' && window.ethereum) {
         try {
-          // Switch to Fuji testnet first
-          await switchToFujiTestnet();
-
           // Request account access
           const accounts = await window.ethereum.request({
             method: 'eth_requestAccounts'
@@ -213,6 +159,7 @@ export const useSmartContracts = (): UseSmartContractsReturn => {
           if (accounts.length === 0) {
             throw new Error('No accounts found. Please unlock MetaMask and try again.');
           }
+
 
           // Create signer from MetaMask
           const browserProvider = new ethers.BrowserProvider(window.ethereum);
@@ -240,28 +187,11 @@ export const useSmartContracts = (): UseSmartContractsReturn => {
           } else if (metaMaskError.code === -32002) {
             throw new Error('Connection request already pending. Please check MetaMask and approve the connection.');
           } else {
-            throw new Error(`MetaMask connection failed: ${metaMaskError.message || 'Unknown error'}`);
+            throw new Error(`MetaMask connection failed: ${metaMaskError.message || 'Unknown error'}. Please check MetaMask and try again.`);
           }
         }
       } else {
-        // Fallback: Use demo wallet for testing
-        console.warn('MetaMask not found, using demo wallet');
-        const demoPrivateKey = '0x1234567890123456789012345678901234567890123456789012345678901234';
-        const wallet = new ethers.Wallet(demoPrivateKey, provider);
-        setSigner(wallet);
-
-        // Update contracts with signer
-        if (tokenContract && dataTransferContract) {
-          const tokenWithSigner = tokenContract.connect(wallet);
-          const dataTransferWithSigner = dataTransferContract.connect(wallet);
-          setTokenContract(tokenWithSigner);
-          setDataTransferContract(dataTransferWithSigner);
-        }
-
-        // Set demo balance
-        setUserBalance('1000.00');
-
-        return wallet.address;
+        throw new Error('MetaMask not found. Please install MetaMask browser extension to connect your wallet.');
       }
     } catch (err) {
       console.error('Wallet connection error:', err);
@@ -270,7 +200,7 @@ export const useSmartContracts = (): UseSmartContractsReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [provider, tokenContract, dataTransferContract, switchToFujiTestnet]);
+  }, [provider, tokenContract, dataTransferContract, getUserBalance]);
 
   // Refresh contract stats
   const refreshStats = useCallback(async () => {

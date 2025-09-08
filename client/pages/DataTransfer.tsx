@@ -22,10 +22,9 @@ import {
   Square, 
   X, 
   AlertTriangle, 
-  TrendingUp, 
+  TrendingUp,
   BarChart3,
   FileText,
-  Smartphone,
   Globe,
   CheckCircle
 } from 'lucide-react';
@@ -84,6 +83,9 @@ const DataTransfer: React.FC = () => {
   const [stakeAmount, setStakeAmount] = useState('1000');
   const [newStationAddress, setNewStationAddress] = useState('');
   const [newStationName, setNewStationName] = useState('');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+
 
   const handleTransfer = async () => {
     try {
@@ -117,6 +119,8 @@ const DataTransfer: React.FC = () => {
 
   const handleConnectWallet = async () => {
     try {
+      setIsConnecting(true);
+      setConnectionError(null);
       const address = await connectWallet();
       setWalletAddress(address);
       setWalletConnected(true);
@@ -125,6 +129,10 @@ const DataTransfer: React.FC = () => {
       await getUserBalance();
     } catch (error) {
       console.error('Failed to connect wallet:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setConnectionError(errorMessage);
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -240,9 +248,9 @@ const DataTransfer: React.FC = () => {
                 <Button 
                   onClick={handleConnectWallet}
                   className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
-                  disabled={contractsLoading}
+                  disabled={contractsLoading || isConnecting}
                 >
-                  {contractsLoading ? (
+                  {contractsLoading || isConnecting ? (
                     <>
                       <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
                       Connecting...
@@ -250,15 +258,16 @@ const DataTransfer: React.FC = () => {
                   ) : (
                     <>
                       <Key className="w-4 h-4 mr-2" />
-                      Connect Wallet
+                      Connect MetaMask
                     </>
                   )}
                 </Button>
+                
                 <p className="text-xs text-purple-300 mt-2">
-                  Connect MetaMask or use demo wallet for testing
+                  Connect MetaMask to access blockchain features
                 </p>
                 <div className="mt-3 text-xs text-purple-400 space-y-1">
-                  <div>• Make sure MetaMask is installed</div>
+                  <div>• Make sure MetaMask is installed and unlocked</div>
                   <div>• Approve network switch to Fuji Testnet</div>
                   <div>• Approve wallet connection request</div>
                 </div>
@@ -290,11 +299,59 @@ const DataTransfer: React.FC = () => {
               </div>
             )}
             
+            {connectionError && (
+              <div className="max-w-md p-4 bg-red-900/30 border border-red-500/30 rounded-lg text-red-200 text-sm">
+                <div className="flex items-center mb-2">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  <span className="font-semibold">MetaMask Connection Error</span>
+                </div>
+                <div className="mb-3 text-xs">
+                  {connectionError}
+                </div>
+                <div className="mb-3 text-xs text-red-300">
+                  <strong>To fix this:</strong>
+                  <ul className="mt-1 ml-4 list-disc">
+                    <li>Make sure MetaMask is installed and unlocked</li>
+                    <li>Click on MetaMask extension and unlock your wallet</li>
+                    <li>Approve the wallet connection request when prompted</li>
+                    <li>If you're already on Fuji testnet, just approve the connection</li>
+                    <li>If you see "not authorized" error, unlock MetaMask and try again</li>
+                  </ul>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleConnectWallet} 
+                    size="sm" 
+                    variant="outline"
+                    className="border-red-500/30 text-red-200 hover:bg-red-900/30"
+                  >
+                    Retry Connection
+                  </Button>
+                  <Button 
+                    onClick={() => window.location.reload()} 
+                    size="sm" 
+                    variant="outline"
+                    className="border-blue-500/30 text-blue-200 hover:bg-blue-900/30"
+                  >
+                    Refresh Page
+                  </Button>
+                  <Button 
+                    onClick={() => setConnectionError(null)} 
+                    size="sm" 
+                    variant="outline"
+                    className="border-red-500/30 text-red-200 hover:bg-red-900/30"
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             {contractsError && (
               <div className="max-w-md p-4 bg-red-900/30 border border-red-500/30 rounded-lg text-red-200 text-sm">
                 <div className="flex items-center mb-2">
                   <AlertTriangle className="w-4 h-4 mr-2" />
-                  <span className="font-semibold">Connection Error</span>
+                  <span className="font-semibold">Smart Contract Error</span>
                 </div>
                 <div className="mb-3 text-xs">
                   {contractsError}
@@ -800,7 +857,7 @@ const DataTransfer: React.FC = () => {
             <Card className="bg-purple-900/20 border-purple-500/30">
               <CardHeader>
                 <CardTitle className="flex items-center text-purple-200">
-                  <Smartphone className="w-5 h-5 mr-2" />
+                  <FileText className="w-5 h-5 mr-2" />
                   Interactive Contract Functions
                 </CardTitle>
               </CardHeader>
