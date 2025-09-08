@@ -1,7 +1,7 @@
 # TARA - Terrain-Aware Rover Autonomy
 
 <div align="center">
-  <img src="WhatsApp Image 2025-09-03 at 11.37.01.jpeg" alt="TARA Logo" width="300" height="auto" />
+  <img src="taralogo.jpeg" alt="TARA Logo" width="300" height="auto" />
   
   <h3>Advanced Lunar Rover Navigation System</h3>
   
