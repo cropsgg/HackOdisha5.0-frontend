@@ -29,7 +29,6 @@ import {
   CheckCircle,
   Lock,
   ShieldCheck,
-  Eye,
   Zap
 } from 'lucide-react';
 import { useAvalancheSubnet } from '@/hooks/useAvalancheSubnet';
